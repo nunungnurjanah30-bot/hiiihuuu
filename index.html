@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BIRD HUNTER – PEMBURU TARGET CERDAS</title>
+<style>
+:root{--ink:#18334b;--blue:#54c8f2;--deep:#1687c2;--yellow:#ffd65a;--pink:#ff7295;--green:#38bd83}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink);background:linear-gradient(#75d7ff 0%,#c9f3ff 55%,#a8e6a0 100%);min-height:100vh}
+button,input{font:inherit}button{cursor:pointer;border:0;border-radius:14px;padding:11px 17px;font-weight:800;color:#17405b;background:var(--yellow);box-shadow:0 4px 0 #d6a92d;transition:.15s}button:hover{transform:translateY(-2px)}button:active{transform:translateY(2px);box-shadow:0 1px 0 #d6a92d}button.secondary{background:#fff;box-shadow:0 4px 0 #c6dce5}button:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:12px clamp(12px,3vw,32px);background:#ffffffd9;backdrop-filter:blur(8px);box-shadow:0 3px 15px #24779a22;position:sticky;top:0;z-index:5}
+.brand{font-weight:1000;letter-spacing:.4px;font-size:clamp(16px,2.5vw,23px);color:#0877ae}.stats{display:flex;gap:8px;flex-wrap:wrap}.pill{background:#e7f8ff;border:2px solid #b5e8f8;padding:7px 12px;border-radius:30px;font-weight:800;font-size:14px}
+main{max-width:1150px;margin:auto;padding:20px 16px 40px}.hero{text-align:center;margin:10px 0 16px}.hero h1{margin:0;color:#0877ae;font-size:clamp(25px,4vw,42px);text-shadow:0 2px white}.hero p{margin:5px 0;color:#32677e;font-weight:650}
+.panel{background:#ffffffed;border:3px solid #fff;border-radius:24px;padding:clamp(15px,3vw,26px);box-shadow:0 12px 30px #21769b22}
+#startPanel{max-width:620px;margin:25px auto;text-align:center}#playerName{width:min(100%,380px);padding:13px;border:2px solid #a9dfef;border-radius:13px;margin:12px 0;outline-color:#27a9db}
+#gamePanel{display:none}.gamehead{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px}.question{font-size:clamp(17px,2.3vw,23px);font-weight:900;line-height:1.35}.qmeta{font-size:12px;font-weight:900;color:#1687c2;letter-spacing:1px;text-transform:uppercase}
+#playfield{position:relative;height:clamp(340px,53vw,510px);overflow:hidden;border:4px solid #fff;border-radius:22px;background:linear-gradient(#70d8ff 0%,#c9f4ff 65%,#a2df8d 65%,#73c76c 100%);box-shadow:inset 0 -10px 0 #54b85d;touch-action:pan-y}
+.cloud{position:absolute;background:#fff;border-radius:50px;width:100px;height:28px;opacity:.85;filter:drop-shadow(0 4px 0 #d5f5ff);animation:cloud 22s linear infinite}.cloud:before,.cloud:after{content:"";position:absolute;background:#fff;border-radius:50%;bottom:7px}.cloud:before{width:40px;height:40px;left:15px}.cloud:after{width:52px;height:52px;left:42px}@keyframes cloud{from{transform:translateX(-150px)}to{transform:translateX(120vw)}}
+.tree{position:absolute;bottom:9%;font-size:clamp(42px,7vw,76px);filter:drop-shadow(0 4px 2px #438c45)}.tree.left{left:2%}.tree.right{right:2%}
+.bird{position:absolute;font-size:clamp(27px,4vw,43px);animation:birdfly 5s ease-in-out infinite alternate;pointer-events:none;filter:drop-shadow(0 3px 1px #fff)}@keyframes birdfly{from{transform:translate(0,0) rotate(-8deg)}to{transform:translate(28px,-17px) rotate(8deg)}}
+.balloon{position:absolute;min-width:86px;min-height:96px;padding:17px 9px 22px;border-radius:50% 50% 46% 46%;display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;font-size:clamp(16px,2vw,21px);font-weight:1000;text-shadow:0 2px 3px #0005;border:3px solid #ffffffb8;box-shadow:inset -8px -8px 0 #00000012,0 6px 8px #0002;cursor:pointer;user-select:none;animation:float 2.6s ease-in-out infinite alternate;z-index:2}
+.balloon:after{content:"";position:absolute;bottom:-17px;left:50%;border-width:17px 7px 0;border-style:solid;border-color:currentColor transparent transparent;filter:brightness(.9);transform:translateX(-50%)}
+@keyframes float{from{transform:translateY(4px) rotate(-3deg)}to{transform:translateY(-10px) rotate(3deg)}}
+.balloon.selected{animation:pop .28s forwards}@keyframes pop{to{transform:scale(1.7);opacity:0}}
+#reticle{position:absolute;width:42px;height:42px;border:4px solid #ff244f;border-radius:50%;box-shadow:0 0 0 4px #fff,0 0 18px #ff244f;transform:translate(-50%,-50%);pointer-events:none;z-index:8;display:none}
+#reticle:before,#reticle:after{content:"";position:absolute;background:#ff244f;left:50%;top:50%;transform:translate(-50%,-50%)}#reticle:before{width:4px;height:58px}#reticle:after{height:4px;width:58px}
+.feedback{min-height:44px;margin:10px 0 0;font-weight:800;text-align:center;font-size:16px}.good{color:#138d5c}.bad{color:#d34d68}
+.controls{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;margin-top:13px}.cameraBox{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center;margin-top:12px}.cameraBox video{width:150px;max-width:38vw;border-radius:12px;transform:scaleX(-1);background:#17394b;display:none}.hint{font-size:13px;color:#4a7182;text-align:center;margin:8px 0}
+#resultPanel{display:none;text-align:center;max-width:680px;margin:20px auto}.bigscore{font-size:clamp(40px,8vw,70px);font-weight:1000;color:#0789bb}.leveldots{display:flex;justify-content:center;gap:8px;margin:15px}.dot{width:30px;height:30px;border-radius:50%;background:#b7d8e2;display:grid;place-items:center;font-weight:900}.dot.done{background:#7ee0b0}
+.modal{position:fixed;inset:0;background:#12384dcc;display:none;align-items:center;justify-content:center;padding:18px;z-index:20}.modal .panel{max-width:450px;text-align:center}
+footer{text-align:center;padding:12px;color:#47758a;font-size:12px}
+@media(max-width:560px){.topbar{justify-content:center}.brand{width:100%;text-align:center}.pill{font-size:12px;padding:6px 9px}.balloon{min-width:76px;min-height:85px;padding:12px 6px 18px}}
+</style>
+</head>
+<body>
+<header class="topbar">
+ <div class="brand">🐦 BIRD HUNTER</div>
+ <div class="stats"><span class="pill">👤 <span id="navName">Pemain</span></span><span class="pill">🏆 Level <span id="navLevel">1</span>/5</span><span class="pill">⭐ <span id="navScore">0</span></span><span class="pill">⏱️ <span id="navTime">60</span>d</span></div>
+</header>
+<main>
+ <div class="hero"><h1>PEMBURU TARGET CERDAS</h1><p>🌳 Jaga taman burung sambil belajar bangun datar! 🌈</p></div>
+ <section id="startPanel" class="panel">
+  <div style="font-size:58px">🦜🎈🐤</div><h2>Selamat datang, Penjaga Taman!</h2>
+  <p>Masukkan namamu, lalu pecahkan balon dengan jawaban yang tepat. Ada 5 level seru!</p>
+  <input id="playerName" maxlength="20" placeholder="Tulis nama pemain..." aria-label="Nama pemain">
+  <div><button id="startBtn">🚀 MULAI BERMAIN</button></div>
+  <p class="hint">Kamu bisa memilih balon dengan mouse, layar sentuh, atau telunjuk melalui kamera.</p>
+ </section>
+ <section id="gamePanel" class="panel">
+  <div class="gamehead"><div><div class="qmeta" id="qmeta">LEVEL 1 • SOAL 1/3 • LOTS</div><div class="question" id="question">Pertanyaan tampil di sini</div></div><div class="pill">🎯 Pilih balon jawaban</div></div>
+  <div id="playfield" aria-label="Area permainan">
+   <div class="cloud" style="top:13%;left:8%"></div><div class="cloud" style="top:26%;left:62%;animation-delay:-8s"></div>
+   <div class="tree left">🌳</div><div class="tree right">🌴</div><div class="bird" style="top:16%;left:24%">🐦</div><div class="bird" style="top:35%;right:20%;animation-delay:-2s">🐤</div>
+   <div id="reticle"></div>
+  </div>
+  <div id="feedback" class="feedback" aria-live="polite">Pilih salah satu balon!</div>
+  <div class="controls"><button id="cameraBtn" class="secondary">📷 Aktifkan Kamera</button><button id="mouseBtn" class="secondary">🖱️ Mode Mouse/Touch Aktif</button><button id="nextBtn" disabled>Soal Berikutnya ➜</button></div>
+  <div class="cameraBox"><video id="camVideo" autoplay playsinline muted></video><div id="cameraStatus" class="hint">Kamera belum aktif. Kamera hanya menyala setelah tombol ditekan.</div></div>
+  <p class="hint">Mode kamera: arahkan telunjuk ke balon, lalu rapatkan ibu jari dan telunjuk (pinch). Mode mouse/touch: klik atau ketuk balon.</p>
+ </section>
+ <section id="resultPanel" class="panel">
+  <div style="font-size:62px">🏅🎉🦜</div><h2 id="resultTitle">Hebat!</h2><div class="bigscore" id="finalScore">0</div><p id="resultText"></p><div class="leveldots" id="levelDots"></div><button id="restartBtn">🔁 Main Lagi</button>
+ </section>
+</main>
+<div class="modal" id="explainModal"><div class="panel"><div style="font-size:42px" id="modalEmoji">💡</div><h2 id="modalTitle">Yuk belajar!</h2><p id="modalText"></p><button id="modalOk">Mengerti</button></div></div>
+<footer>Media pembelajaran Matematika • Kelas 1 • Bangun Datar</footer>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+<script>
+const levels=[
+[
+{type:"LOTS",q:"Bentuk papan tulis di kelas biasanya seperti apa?",a:["Lingkaran","Persegi panjang","Segitiga"],correct:1,why:"Papan tulis umumnya memiliki 4 sisi: dua sisi panjang dan dua sisi pendek. Bentuknya persegi panjang."},
+{type:"MOTS",q:"Lihat benda di taman: roda sepeda memiliki bentuk ...",a:["Lingkaran","Persegi","Segitiga"],correct:0,why:"Roda berbentuk lingkaran karena bundar dan tidak memiliki sudut."},
+{type:"HOTS",q:"Rani ingin membuat bendera kecil dengan 3 sisi lurus. Bentuk apa yang harus dipilih?",a:["Lingkaran","Persegi panjang","Segitiga"],correct:2,why:"Segitiga mempunyai 3 sisi dan 3 sudut. Jadi cocok untuk bendera dengan 3 sisi."}
+],
+[
+{type:"LOTS",q:"Bangun datar yang memiliki 4 sisi sama panjang adalah ...",a:["Persegi","Lingkaran","Segitiga"],correct:0,why:"Persegi memiliki 4 sisi yang sama panjang."},
+{type:"MOTS",q:"Sebuah ubin lantai memiliki 4 sisi sama panjang. Bentuk ubin itu adalah ...",a:["Segitiga","Persegi","Lingkaran"],correct:1,why:"Ubin dengan 4 sisi sama panjang berbentuk persegi."},
+{type:"HOTS",q:"Dito punya kertas berbentuk persegi. Ia ingin memilih benda yang bentuknya sama. Mana pilihannya?",a:["Jam dinding bundar","Ubin persegi","Penggaris panjang"],correct:1,why:"Ubin persegi memiliki bentuk yang sama dengan kertas persegi. Jam bundar berbentuk lingkaran dan penggaris menyerupai persegi panjang."}
+],
+[
+{type:"LOTS",q:"Segitiga mempunyai berapa sisi?",a:["2 sisi","3 sisi","4 sisi"],correct:1,why:"Segitiga mempunyai 3 sisi lurus."},
+{type:"MOTS",q:"Atap rumah pada gambar sederhana sering dibuat seperti bentuk ...",a:["Segitiga","Lingkaran","Persegi"],correct:0,why:"Bagian atap rumah sering digambar seperti segitiga."},
+{type:"HOTS",q:"Siti menyusun 2 segitiga kecil menjadi bentuk seperti gunung. Bangun apakah yang ia gunakan untuk menyusunnya?",a:["Dua lingkaran","Dua segitiga","Dua persegi panjang"],correct:1,why:"Dua bangun yang dipakai Siti adalah dua segitiga. Bentuk gabungannya dapat menyerupai gunung."}
+],
+[
+{type:"LOTS",q:"Bangun datar yang tidak memiliki sudut adalah ...",a:["Persegi","Segitiga","Lingkaran"],correct:2,why:"Lingkaran berbentuk bundar dan tidak mempunyai sudut."},
+{type:"MOTS",q:"Piring makan biasanya berbentuk ...",a:["Lingkaran","Segitiga","Persegi panjang"],correct:0,why:"Piring biasanya bundar, sehingga berbentuk lingkaran."},
+{type:"HOTS",q:"Beni akan menggambar jam dinding bundar dan jendela dengan 4 sisi. Pasangan bentuk yang tepat adalah ...",a:["Lingkaran dan persegi panjang","Segitiga dan lingkaran","Persegi dan segitiga"],correct:0,why:"Jam bundar berbentuk lingkaran, sedangkan jendela dengan dua sisi panjang dan dua sisi pendek berbentuk persegi panjang."}
+],
+[
+{type:"LOTS",q:"Persegi panjang mempunyai berapa sisi?",a:["3 sisi","4 sisi","5 sisi"],correct:1,why:"Persegi panjang memiliki 4 sisi."},
+{type:"MOTS",q:"Buku tulis biasanya memiliki bentuk ...",a:["Persegi panjang","Lingkaran","Segitiga"],correct:0,why:"Sampul buku tulis umumnya berbentuk persegi panjang."},
+{type:"HOTS",q:"Di taman ada jam bundar, ubin persegi, dan papan nama persegi panjang. Benda yang memiliki 4 sisi sama panjang adalah ...",a:["Jam bundar","Ubin persegi","Papan nama"],correct:1,why:"Ubin persegi memiliki 4 sisi sama panjang. Papan nama persegi panjang memiliki sisi berhadapan sama panjang."}
+]
+];
+let player="Pemain",level=0,questionIndex=0,score=0,timeLeft=60,timer=null,answered=false,selectedMode="mouse",camera=null,hands=null,camStream=null,pinchDown=false,lastPinch=0,gameActive=false;
+const $=id=>document.getElementById(id);
+const field=$("playfield"),reticle=$("reticle"),video=$("camVideo");
+const colors=["#f45f91","#32a9df","#f5a623","#8a70dc","#2bbd91","#ef7952"];
+function updateNav(){$("navName").textContent=player;$("navLevel").textContent=level+1;$("navScore").textContent=score;$("navTime").textContent=timeLeft}
+function startGame(){player=$("playerName").value.trim()||"Penjaga Taman";level=0;questionIndex=0;score=0;timeLeft=60;gameActive=true;$("startPanel").style.display="none";$("resultPanel").style.display="none";$("gamePanel").style.display="block";updateNav();loadQuestion();startTimer()}
+function startTimer(){clearInterval(timer);timer=setInterval(()=>{if(!gameActive)return;timeLeft--; $("navTime").textContent=timeLeft;if(timeLeft<=0){clearInterval(timer);finishGame(true)}},1000)}
+function loadQuestion(){answered=false;$("nextBtn").disabled=true;const item=levels[level][questionIndex];$("qmeta").textContent=`LEVEL ${level+1} • SOAL ${questionIndex+1}/3 • ${item.type}`;$("question").textContent=item.q;$("feedback").textContent="Pilih salah satu balon!";$("feedback").className="feedback";field.querySelectorAll(".balloon").forEach(x=>x.remove());item.a.forEach((answer,i)=>{let b=document.createElement("button");b.className="balloon";b.textContent=answer;b.style.background=colors[(i+level)%colors.length];b.style.color=colors[(i+level)%colors.length];b.style.left=(17+i*31)+"%";b.style.top=(31+(i%2)*23)+"%";b.style.animationDelay=(i*.25)+"s";b.setAttribute("aria-label","Pilih "+answer);b.addEventListener("click",()=>choose(i,b));field.appendChild(b)});updateNav()}
+function choose(i,el){if(answered||!gameActive)return;answered=true;const item=levels[level][questionIndex];el.classList.add("selected");playPop();if(i===item.correct){score+=100;$("feedback").textContent="✨ Hebat! Jawabanmu benar. +100 poin!";$("feedback").className="feedback good";}else{$("feedback").textContent="Tidak apa-apa, tetap semangat! 💛";$("feedback").className="feedback bad";}updateNav();setTimeout(()=>{field.querySelectorAll(".balloon").forEach(b=>{if(!b.classList.contains("selected"))b.style.opacity=".35"});$("modalEmoji").textContent=i===item.correct?"🌟":"💡";$("modalTitle").textContent=i===item.correct?"Jawaban tepat!":"Ayo kita pelajari!";$("modalText").textContent=item.why;$("explainModal").style.display="flex";},350);$("nextBtn").disabled=false}
+function advance(){if(!answered)return;$("explainModal").style.display="none";if(questionIndex<2){questionIndex++;loadQuestion()}else if(level<4){level++;questionIndex=0;loadQuestion()}else finishGame(false)}
+function finishGame(timeout){gameActive=false;clearInterval(timer);stopCamera();$("gamePanel").style.display="none";$("resultPanel").style.display="block";$("finalScore").textContent=score+" POIN";$("resultTitle").textContent=timeout?"Waktu Habis!":"Misi Berhasil, "+player+"!";$("resultText").textContent=`Kamu sudah berusaha hebat, ${player}! Kamu mendapatkan ${score} dari 1.500 poin. Terus berlatih mengenali bangun datar di sekitarmu!`;let dots="";for(let i=0;i<5;i++)dots+=`<div class="dot ${i<=level&&!timeout?"done":""}">${i+1}</div>`;$("levelDots").innerHTML=dots}
+function playPop(){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;const c=new C(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.type="sine";o.frequency.setValueAtTime(660,c.currentTime);o.frequency.exponentialRampToValueAtTime(220,c.currentTime+.18);g.gain.setValueAtTime(.18,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.2);o.start();o.stop(c.currentTime+.21)}catch(e){}}
+function pointerMove(x,y){const r=field.getBoundingClientRect();reticle.style.display="block";reticle.style.left=(x-r.left)+"px";reticle.style.top=(y-r.top)+"px"}
+function chooseAt(x,y){const el=document.elementFromPoint(x,y);if(el&&el.classList.contains("balloon"))el.click()}
+field.addEventListener("pointermove",e=>{if(selectedMode==="mouse")pointerMove(e.clientX,e.clientY)});
+field.addEventListener("pointerdown",e=>{if(selectedMode==="mouse"){const el=e.target.closest(".balloon");if(el)el.click()}});
+$("mouseBtn").onclick=()=>{selectedMode="mouse";reticle.style.display="none";$("cameraStatus").textContent="Mode mouse/touch aktif."};
+async function startCamera(){
+ if(!navigator.mediaDevices?.getUserMedia){$("cameraStatus").textContent="Browser ini tidak mendukung kamera. Gunakan mouse/touch.";return}
+ try{
+  $("cameraStatus").textContent="Meminta izin kamera...";
+  camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user",width:640,height:480},audio:false});
+  video.srcObject=camStream;video.style.display="block";await video.play();
+  if(!window.Hands){$("cameraStatus").textContent="MediaPipe gagal dimuat. Gunakan mouse/touch.";return}
+  hands=new Hands({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`});
+  hands.setOptions({maxNumHands:1,modelComplexity:1,minDetectionConfidence:.65,minTrackingConfidence:.6});
+  hands.onResults(onHandResults);
+  camera=new Camera(video,{onFrame:async()=>{if(hands)await hands.send({image:video})},width:640,height:480});
+  await camera.start();selectedMode="camera";$("cameraStatus").textContent="Kamera aktif! Arahkan telunjuk dan lakukan pinch untuk memilih.";
+ }catch(err){$("cameraStatus").textContent="Kamera tidak dapat diaktifkan. Izinkan akses kamera atau gunakan mouse/touch.";console.error(err)}
+}
+function onHandResults(results){
+ if(!results.multiHandLandmarks||!results.multiHandLandmarks.length){reticle.style.display="none";pinchDown=false;return}
+ const lm=results.multiHandLandmarks[0],index=lm[8],thumb=lm[4];
+ const rect=field.getBoundingClientRect();
+ // Kamera selfie dicerminkan agar gerak terasa alami.
+ const x=rect.left+(1-index.x)*rect.width,y=rect.top+index.y*rect.height;
+ pointerMove(x,y);
+ const d=Math.hypot(index.x-thumb.x,index.y-thumb.y);
+ const pinching=d<.055;
+ if(pinching&&!pinchDown&&Date.now()-lastPinch>650){chooseAt(x,y);lastPinch=Date.now()}
+ pinchDown=pinching;
+}
+function stopCamera(){try{if(camera)camera.stop();if(camStream)camStream.getTracks().forEach(t=>t.stop())}catch(e){}camera=null;hands=null;camStream=null;video.srcObject=null;video.style.display="none";reticle.style.display="none";$("cameraStatus").textContent="Kamera dimatikan."}
+$("cameraBtn").onclick=()=>{if(selectedMode==="camera"){stopCamera();selectedMode="mouse"}else startCamera()};
+$("startBtn").onclick=startGame;$("nextBtn").onclick=advance;$("modalOk").onclick=()=>{$("explainModal").style.display="none";advance()};
+$("restartBtn").onclick=()=>{$("resultPanel").style.display="none";$("startPanel").style.display="block";$("playerName").value=player;stopCamera()};
+window.addEventListener("beforeunload",stopCamera);
+</script>
+</body>
+</html>
